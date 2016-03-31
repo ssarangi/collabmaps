@@ -12,6 +12,13 @@ app.get('/', function(req, res) {
     res.sendFile(__dirname + "/html/index.html");
 });
 
+var userData = function(name) {
+    this.name = name;
+    this.id = null;
+    this.lng = null;
+    this.lat = null;
+}
+
 var users_id_map = {}
 
 io.on('connection', function(socket) {
@@ -38,11 +45,20 @@ io.on('connection', function(socket) {
             io.to(this.id).emit('current_users', users);
         }
 
-        users_id_map[this.id] = username;
+        var ud = new userData(username);
+        users_id_map[this.id] = ud;
     });
     
     socket.on('chat_message', function(msg) {
        socket.broadcast.emit('chat message', msg);
+    });
+    
+    socket.on('user_location', function(user_data) {
+        users_id_map[this.id].lng = user_data["lng"];
+        users_id_map[this.id].lat = user_data["lat"];
+        users_id_map[this.id].id = user_data["id"];
+        
+        socket.broadcast.emit('user_location', user_data); 
     });
 })
 
